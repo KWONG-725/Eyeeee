@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eye-Tracking Shooting Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>👁️ Eye-Tracking Shooting Game</h1>
+            <p class="subtitle">Eye Control Training for Visual Excellence</p>
+        </header>
+
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <button id="settingsBtn" class="btn btn-primary" aria-label="Open settings">
+                ⚙️ Settings
+            </button>
+            <button id="calibrateBtn" class="btn btn-primary" aria-label="Start calibration">
+                🎯 Calibrate
+            </button>
+            <button id="startBtn" class="btn btn-success" aria-label="Start game">
+                ▶️ Start Game
+            </button>
+            <button id="pauseBtn" class="btn btn-warning" aria-label="Pause game" disabled>
+                ⏸️ Pause
+            </button>
+            <button id="helpBtn" class="btn btn-secondary" aria-label="Show help">
+                ❓ Help
+            </button>
+            <span id="statusDisplay" class="status-display" aria-live="polite" aria-atomic="true">
+                Initializing...
+            </span>
+        </div>
+
+        <!-- Main Game Container -->
+        <main class="game-container">
+            <!-- Webcam Section -->
+            <section class="webcam-section">
+                <h2>Webcam Feed</h2>
+                <div class="webcam-container">
+                    <video id="webcamVideo" autoplay playsinline></video>
+                    <canvas id="webcamCanvas" aria-hidden="true"></canvas>
+                    <div id="faceIndicator" class="face-indicator" aria-label="Face detection status"></div>
+                </div>
+                <div class="webcam-info">
+                    <span id="fpsCounter">FPS: 0</span>
+                    <span id="facStatus">Face: Not Detected</span>
+                </div>
+            </section>
+
+            <!-- Game Section -->
+            <section class="game-section">
+                <div class="game-canvas-container">
+                    <canvas id="gameCanvas" aria-label="Game play area"></canvas>
+                    <div id="gazePoint" class="gaze-point" aria-hidden="true"></div>
+                </div>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Score:</span>
+                        <span id="scoreDisplay" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Accuracy:</span>
+                        <span id="accuracyDisplay" class="stat-value">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Time:</span>
+                        <span id="timerDisplay" class="stat-value">0:00</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal" role="dialog" aria-labelledby="settingsTitle" aria-hidden="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="settingsTitle">Settings</h2>
+                    <button class="modal-close" aria-label="Close settings">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Webcam Settings -->
+                    <div class="settings-section">
+                        <h3>Webcam Settings</h3>
+                        
+                        <div class="setting-item">
+                            <label for="cameraSelect">Select Camera:</label>
+                            <select id="cameraSelect" aria-label="Select camera device">
+                                <option value="">-- Select Camera --</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="mirrorHorizontal" aria-label="Mirror horizontally">
+                                Mirror Horizontally (Left-Right Flip)
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="mirrorVertical" aria-label="Mirror vertically">
+                                Mirror Vertically (Top-Bottom Flip)
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="brightnessSlider">Brightness:</label>
+                            <input type="range" id="brightnessSlider" min="-100" max="100" value="0" aria-label="Adjust brightness">
+                            <span id="brightnessValue">0</span>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="contrastSlider">Contrast:</label>
+                            <input type="range" id="contrastSlider" min="-100" max="100" value="0" aria-label="Adjust contrast">
+                            <span id="contrastValue">0</span>
+                        </div>
+
+                        <button class="btn btn-secondary" id="resetWebcamBtn" aria-label="Reset webcam settings">
+                            Reset Webcam Settings
+                        </button>
+                    </div>
+
+                    <!-- Game Settings -->
+                    <div class="settings-section">
+                        <h3>Game Settings</h3>
+
+                        <div class="setting-item">
+                            <label for="difficultySelect">Difficulty:</label>
+                            <select id="difficultySelect" aria-label="Select difficulty level">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="gameDurationSelect">Game Duration:</label>
+                            <select id="gameDurationSelect" aria-label="Select game duration">
+                                <option value="30">30 seconds</option>
+                                <option value="60" selected>60 seconds</option>
+                                <option value="120">120 seconds</option>
+                                <option value="0">Unlimited</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="targetSizeSelect">Target Size:</label>
+                            <select id="targetSizeSelect" aria-label="Select target size">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="gazePointSizeSlider">Gaze Point Size:</label>
+                            <input type="range" id="gazePointSizeSlider" min="5" max="30" value="10" aria-label="Adjust gaze point size">
+                            <span id="gazePointSizeValue">10</span>px
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="soundToggle" checked aria-label="Toggle sound effects">
+                                Sound Effects
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="voiceFeedbackToggle" aria-label="Toggle voice feedback">
+                                Voice Feedback
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="highContrastToggle" aria-label="Toggle high contrast mode">
+                                High Contrast Mode
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="closeSettingsBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calibration Modal -->
+        <div id="calibrationModal" class="modal" role="dialog" aria-labelledby="calibrationTitle" aria-hidden="true">
+            <div class="modal-content calibration-content">
+                <div class="modal-header">
+                    <h2 id="calibrationTitle">Eye Calibration</h2>
+                </div>
+
+                <div class="modal-body">
+                    <div id="calibrationInstructions" class="calibration-instructions">
+                        <p>Please follow the red dots with your eyes. Look at each point when it appears.</p>
+                        <button class="btn btn-success" id="startCalibrationBtn">Start Calibration</button>
+                    </div>
+                    <canvas id="calibrationCanvas" style="display: none;" aria-label="Calibration canvas"></canvas>
+                    <div id="calibrationResults" style="display: none;">
+                        <h3>Calibration Complete!</h3>
+                        <p>Accuracy: <span id="calibrationAccuracy">0</span>%</p>
+                        <button class="btn btn-success" id="confirmCalibrationBtn">Start Playing</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="helpModal" class="modal" role="dialog" aria-labelledby="helpTitle" aria-hidden="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="helpTitle">How to Play</h2>
+                    <button class="modal-close" aria-label="Close help">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="help-content">
+                        <h3>Objective</h3>
+                        <p>Look at the targets on the screen and keep your eyes focused on them to score points. The longer you maintain eye contact, the higher your score!</p>
+
+                        <h3>How to Play</h3>
+                        <ol>
+                            <li>Allow camera access when prompted</li>
+                            <li>Click "Calibrate" to calibrate your eye tracking (optional but recommended)</li>
+                            <li>Click "Start Game" to begin</li>
+                            <li>Look at the targets that appear on screen</li>
+                            <li>Keep your eyes focused on a target to select it</li>
+                            <li>When the progress ring fills up, the target is selected and you score points!</li>
+                        </ol>
+
+                        <h3>Settings</h3>
+                        <ul>
+                            <li><strong>Webcam Settings:</strong> Adjust camera selection, mirror options, brightness, and contrast</li>
+                            <li><strong>Game Settings:</strong> Choose difficulty, duration, target size, and audio options</li>
+                            <li><strong>High Contrast Mode:</strong> Enable for better visibility</li>
+                        </ul>
+
+                        <h3>Difficulty Levels</h3>
+                        <ul>
+                            <li><strong>Easy:</strong> Large targets, slow movement, more time to select</li>
+                            <li><strong>Medium:</strong> Medium targets, moderate movement, balanced timing</li>
+                            <li><strong>Hard:</strong> Small targets, fast movement, quick selection required</li>
+                        </ul>
+
+                        <h3>Tips for Best Experience</h3>
+                        <ul>
+                            <li>Ensure good lighting for better eye detection</li>
+                            <li>Keep your face centered in the webcam view</li>
+                            <li>Sit at a comfortable distance from the screen</li>
+                            <li>Use calibration for better accuracy</li>
+                            <li>Take breaks if you experience eye strain</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="closeHelpBtn">Got it!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="modal" role="dialog" aria-labelledby="gameOverTitle" aria-hidden="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="gameOverTitle">Game Over!</h2>
+                </div>
+
+                <div class="modal-body">
+                    <div class="game-over-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Final Score:</span>
+                            <span id="finalScore" class="stat-value-large">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Targets Hit:</span>
+                            <span id="targetsHit" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Targets Missed:</span>
+                            <span id="targetsMissed" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Accuracy:</span>
+                            <span id="finalAccuracy" class="stat-value">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Average Fixation Time:</span>
+                            <span id="avgFixation" class="stat-value">0.0s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success" id="playAgainBtn">Play Again</button>
+                    <button class="btn btn-secondary" id="exitGameBtn">Exit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    
+    <script src="js/utils.js"></script>
+    <script src="js/mediapipe-setup.js"></script>
+    <script src="js/calibration.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
